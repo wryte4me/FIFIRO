@@ -1,4 +1,4 @@
-#include <Arduino.h>#include <Arduino.h>
+#include <Arduino.h>
 
 byte command; // The command byte to process
 
