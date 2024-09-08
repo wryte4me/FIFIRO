@@ -1,7 +1,7 @@
 # Firefighting Robot (FIFIRO)
 
 ## Overview
-This is a 4 wheeled fire fighting robot equipped with a 2-kg fire extinguisher for fire suppression. It can function autonomously by receiving guidance from three flame sensors looking for fire. It can also be controlled remotely using an Android App developed using MIT App Inventor 2 (AI2). 
+This is a 4-wheeled fire fighting robot equipped with a 2-kg fire extinguisher for fire suppression. It can function autonomously by receiving guidance from three flame sensors looking for fire. It can also be controlled remotely using an Android App developed using MIT App Inventor 2 (AI2). 
 
 ## Hardware
 
@@ -15,17 +15,20 @@ This is a 4 wheeled fire fighting robot equipped with a 2-kg fire extinguisher f
 7. Full Metal Gear Set Motor
 8. Geared DC Motor
 9. Metal Wheel
+### Schematic 
 
 
-## App Inventor
-
-### Designer 
-
-### Blocks
-
-## Platform IO
+## Software
 
 ### Algorithm 
+
+### Mobile App
+
+#### Designer 
+
+#### Blocks
+
+### Controller Board
 
 ### Configuration File
 
