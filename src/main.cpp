@@ -1,4 +1,4 @@
-#include<Arduino.h>
+#include <Arduino.h>
 
 byte command;
 
@@ -53,7 +53,7 @@ void setup() {
 }
 void loop() {
  
- if (Serial.available() > 0){
+ if (Serial3.available() > 0){
     Serial.println (Serial3.read());
  }
 }
