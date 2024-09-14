@@ -72,16 +72,16 @@ void stop() {
 void toggleAutoMode (bool isAuto){
   if (isAuto) {
     inAutoMode = true;
+    Serial.println("Entering auto mode");
   } else {
     inAutoMode = false;
     stop();
   }
+  command = 0;
 }
 
 // Function to handle auto mode with fire detection
 void runAutoMode() {
-  Serial.println("Entering auto mode");
-
   if (onFire(irFront_pin)) {
     Serial.println("Fire detected in front!");
     reverse();  // Move back if fire is detected in front
@@ -94,6 +94,8 @@ void runAutoMode() {
   } else {
     forward();  // If no fire is detected, move forward
   }
+
+  delay (300);
 }
 
 void runManualMode (){
@@ -113,7 +115,7 @@ void toolCommand() {
 void processCommand() {
   switch (command) {
     case 0:
-      Serial.println("Waiting for command");
+      !inAutoMode && Serial.println("Waiting for command");
       break;
     case 1:
       forward();
