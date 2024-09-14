@@ -1,64 +1,119 @@
 #include <Arduino.h>
 
+const byte forwardRight_pin = 5;
+const byte reverseRight_pin = 4;
+const byte forwardLeft_pin = 3;
+const byte reverseLeft_pin = 2;
+
+/*
+const byte squeezeForward_pin = 6;
+const byte squeezeBackward_pin = 7;
+
+const byte minLimitSwitch_pin = 8;
+const byte maxLimitSwitch_pin = 9;
+*/
+const int runPulse = 50;
+
+const byte irFront_pin = 10;
+const byte irRight_pin = 11;
+const byte irLeft_pin = 12;
+
 byte command; // The command byte to process
+bool fireDetected = false;
+bool inAutoMode = false;
+
+// Function to check if a specific IR sensor detects fire
+bool onFire(byte irFlameSensor_pin) {
+  return digitalRead(irFlameSensor_pin) == LOW; // IR sensor returns LOW when fire is detected
+}
 
 // Function to move the robot forward
 void forward() {
   Serial.println("Moving forward");
-  // Add code to move forward
+  digitalWrite(forwardRight_pin, LOW);
+  digitalWrite(forwardLeft_pin, LOW);
+  delay(runPulse);
 }
 
 // Function to move the robot backward
 void reverse() {
   Serial.println("Moving backward");
-  // Add code to move backward
+  digitalWrite(reverseRight_pin, LOW);
+  digitalWrite(reverseLeft_pin, LOW);
+  delay(runPulse);
 }
 
 // Function to turn the robot to the right
 void turnRight() {
-  Serial.println("Moving right");
-  // Add code to turn right
+  Serial.println("Turning right");
+  digitalWrite(forwardLeft_pin, LOW); // Left motor moves forward
+  digitalWrite(reverseRight_pin, LOW); // Right motor moves backward
+  delay(runPulse);
 }
 
 // Function to turn the robot to the left
 void turnLeft() {
-  Serial.println("Moving left");
-  // Add code to turn left
+  Serial.println("Turning left");
+  digitalWrite(forwardRight_pin, LOW); // Right motor moves forward
+  digitalWrite(reverseLeft_pin, LOW); // Left motor moves backward
+  delay(runPulse);
 }
 
 // Function to stop the robot
 void stop() {
   Serial.println("Stopping");
-  // Add code to stop the robot
-  command = 0;
+  digitalWrite(forwardRight_pin, HIGH);
+  digitalWrite(reverseRight_pin, HIGH);
+  digitalWrite(forwardLeft_pin, HIGH);
+  digitalWrite(reverseLeft_pin, HIGH);
+  command = 0; // Reset the command after stopping
 }
 
-// Function to handle manual mode
-void manualMode() {
-  Serial.println("Entering manual mode");
-  command = 0;
-  // Add code for manual mode
+void toggleAutoMode (bool isAuto){
+  if (isAuto) {
+    inAutoMode = true;
+  } else {
+    inAutoMode = false;
+    stop();
+  }
 }
 
-// Function to handle auto mode
-void autoMode() {
+// Function to handle auto mode with fire detection
+void runAutoMode() {
   Serial.println("Entering auto mode");
-  // Add code for auto mode
-  command = 0;
+
+  if (onFire(irFront_pin)) {
+    Serial.println("Fire detected in front!");
+    reverse();  // Move back if fire is detected in front
+  } else if (onFire(irLeft_pin)) {
+    Serial.println("Fire detected on the left!");
+    turnRight();  // Turn right if fire is detected on the left
+  } else if (onFire(irRight_pin)) {
+    Serial.println("Fire detected on the right!");
+    turnLeft();  // Turn left if fire is detected on the right
+  } else {
+    forward();  // If no fire is detected, move forward
+  }
 }
+
+void runManualMode (){
+
+}
+
+
 
 // Function to handle tool command
 void toolCommand() {
   Serial.println("Executing tool command");
-  // Add code for tool command
   command = 0;
+  // Add code to execute a tool command
 }
 
 // Function to process commands
-void processCommand() {  
+void processCommand() {
   switch (command) {
     case 0:
-      Serial.println ("Waiting for command");
+      Serial.println("Waiting for command");
       break;
     case 1:
       forward();
@@ -76,10 +131,10 @@ void processCommand() {
       stop();
       break;
     case 6:
-      manualMode();
+      toggleAutoMode(true);
       break;
     case 7:
-      autoMode();
+      toggleAutoMode(false);
       break;
     case 8:
       toolCommand();
@@ -94,16 +149,39 @@ void processCommand() {
 void getCommand() {
   if (Serial3.available() > 0) {
     command = Serial3.read(); // Read the command byte
-    
   }
+}
+
+void setupPinMode() {
+  pinMode(forwardRight_pin, OUTPUT);
+  pinMode(reverseRight_pin, OUTPUT);
+  pinMode(forwardLeft_pin, OUTPUT);
+  pinMode(reverseLeft_pin, OUTPUT);
+
+  pinMode(irFront_pin, INPUT);
+  pinMode(irRight_pin, INPUT);
+  pinMode(irLeft_pin, INPUT);
+
+  // Initialize all pins to HIGH (motors off)
+  digitalWrite(forwardRight_pin, HIGH);
+  digitalWrite(reverseRight_pin, HIGH);
+  digitalWrite(forwardLeft_pin, HIGH);
+  digitalWrite(reverseLeft_pin, HIGH);
 }
 
 void setup() {
   Serial.begin(9600);
   Serial3.begin(9600);
+  setupPinMode();
 }
 
 void loop() {
   getCommand();
   processCommand();       // Process the command
+
+  if (inAutoMode){
+    runAutoMode ();
+  } else {
+    runManualMode();
+  }
 }
