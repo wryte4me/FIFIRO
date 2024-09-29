@@ -1,9 +1,13 @@
 #include <Arduino.h>
+#include <BTS7960_Motordriver.h>
 
 const byte forwardRight_pin = 5;
 const byte reverseRight_pin = 4;
 const byte forwardLeft_pin = 3;
 const byte reverseLeft_pin = 2;
+
+const byte squeezeFireExt_pin = 6;
+const byte releaseFireExt_pin = 7; 
 
 /*
 const byte squeezeForward_pin = 6;
