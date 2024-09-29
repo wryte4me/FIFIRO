@@ -17,6 +17,17 @@ This is a 4-wheeled fire fighting robot equipped with a 2-kg fire extinguisher f
 9. Metal Wheel
 ### Schematic 
 
+1. L298N Motor Driver + Geared DC Motor 
+![Motor Control Circuit for Navigation](image.png)
+2. Linear Actuator + BTS7960 MOTOR DRIVER
+![Fire Suppression using linear actuator and fire extinguisher
+](image-1.png)
+3. IR Flame Sensor
+![Flame Detection Circuit](image-5.png)
+4. Obstacle Avoidance Circuit
+![Obstacle Avoidance Circuit](image-4.png)
+
+
 
 ## Software
 
