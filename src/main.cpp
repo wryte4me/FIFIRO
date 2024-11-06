@@ -26,19 +26,19 @@ const byte sonarLeft_pin    = 10;   // Pin for the left sonar sensor
 
 // Right motor pins
 const byte rightEna_pin     = 2;    // Enable pin for the right motor
-const byte rightForward_pin = 3;   // Forward pin for the right motor
-const byte rightReverse_pin = 4;   // Reverse pin for the right motor
+const byte rightForward_pin = 3;    // Forward pin for the right motor
+const byte rightReverse_pin = 4;    // Reverse pin for the right motor
 
 // Left motor pins
 const byte leftEna_pin      = 7;    // Enable pin for the left motor
-const byte leftForward_pin  = 6;   // Forward pin for the left motor
-const byte leftReverse_pin  = 5;   // Reverse pin for the left motor
+const byte leftForward_pin  = 6;    // Forward pin for the left motor
+const byte leftReverse_pin  = 5;    // Reverse pin for the left motor
 
 // Linear Actuator Driver Pins
 const byte linearCwEn_pin   = 22;   // Clockwise enable pin for the linear actuator driver
-const byte linearCcwEn_pin  = 23;  // Counterclockwise enable pin for the linear actuator driver
-const byte linearCwPwm_pin  = 11;  // Clockwise PWM pin for controlling the linear actuator speed
-const byte linearCcwPwm_pin = 12;  // Counterclockwise PWM pin for controlling the linear actuator speed
+const byte linearCcwEn_pin  = 23;   // Counterclockwise enable pin for the linear actuator driver
+const byte linearCwPwm_pin  = 10;   // Clockwise PWM pin for controlling the linear actuator speed
+const byte linearCcwPwm_pin = 11;   // Counterclockwise PWM pin for controlling the linear actuator speed
 
 // OBJECTS ------------------------------------------------------------------
 // Create NewPing objects for sonar sensors
@@ -47,7 +47,7 @@ NewPing sonarRight(sonarRight_pin, sonarRight_pin, sonarMaxDistance); // Right s
 NewPing sonarLeft(sonarLeft_pin, sonarLeft_pin, sonarMaxDistance);    // Left sonar
 
 
-// PINMODE ------------------------------------------------------------------
+// PIN MODE ------------------------------------------------------------------
 void setPinModes() {
     // Set right motor pins
     pinMode(rightEna_pin, OUTPUT);      // Enable pin for the right motor (controls power to the motor)
@@ -70,6 +70,46 @@ void setPinModes() {
     pinMode(flameRight_pin, INPUT);     // Input pin for the right flame sensor (detects flames on the right)
     pinMode(flameLeft_pin, INPUT);      // Input pin for the left flame sensor (detects flames on the left)
 }
+
+
+void enableLinear(bool status) {
+    if (status) {
+        digitalWrite(linearCwEn_pin, HIGH);
+        digitalWrite(linearCcwEn_pin, HIGH);
+        Serial.println("Linear actuator enabled.");
+    } else {
+        digitalWrite(linearCwEn_pin, LOW);
+        digitalWrite(linearCcwEn_pin, LOW);
+        Serial.println("Linear actuator disabled.");
+    }
+}
+
+void moveLinear(String direction) {
+    if (direction == "down") {
+        // Move linear actuator clockwise
+        digitalWrite(linearCcwPwm_pin, LOW); // Set counterclockwise PWM pin to LOW
+        analogWrite(linearCwPwm_pin, 255);   // Set clockwise PWM pin to max value (255)
+        Serial.println("Moving linear actuator down.");
+    } else if (direction == "up") {
+        // Move linear actuator counterclockwise
+        digitalWrite(linearCwPwm_pin, LOW);  // Set clockwise PWM pin to LOW
+        analogWrite(linearCcwPwm_pin, 255);  // Set counterclockwise PWM pin to max value (255)
+        Serial.println("Moving linear actuator up.");
+    } else {
+        Serial.println("Invalid direction. Please use 'up' or 'down'.");
+    }
+}
+
+void squeeze (){
+    moveLinear("down");
+}
+
+void release (){
+    moveLinear("up");
+}
+
+
+
 
 int sonarDistance (NewPing sonar){
     return sonar.ping_cm();
@@ -217,7 +257,7 @@ void getCommand() {
     if (Serial3.available() > 0) {
         command = Serial3.read(); // Read the command byte from the Bluetooth serial
         Serial.print("Command received: ");
-        Serial.println(command); // Print the received command for debugging
+        Serial.println(command); // Print the received command for debugging use serial printf command is byte
         motorSpeed = 255;
     }
 }
@@ -268,12 +308,23 @@ void setup() {
 }
 
 void loop() {
-    getCommand();
-    processCommand();
+    //getCommand();
+    //processCommand();
     delay(50); // Optional: add a small delay
 
     //fireDetected();
 
     //testSonar();
+
+    enableLinear (true);
+    delay (500);
+    squeeze();
+    //moveLinear ("up");
+    delay (5000);
+    release();
+    //moveLinear ("down");
+    delay (5000);
+    //enableLinear (false);
+    delay (2000);
 
 }
