@@ -101,11 +101,11 @@ void moveLinear(String direction) {
 }
 
 void squeeze (){
-    moveLinear("down");
+    moveLinear("up");
 }
 
 void release (){
-    moveLinear("up");
+    moveLinear("down");
 }
 
 void stopSqueeze (){
@@ -113,6 +113,8 @@ void stopSqueeze (){
     analogWrite(linearCcwPwm_pin, 0);  // Set counterclockwise PWM pin to max value (255)
     Serial.println("Stopping");
 }
+
+
 
 
 
@@ -259,8 +261,28 @@ void toggleAutoMode(bool enable) {
     Serial.println(enable ? "enabled" : "disabled");
 }
 
+void swing() {
+    setSpeed(100);
+    for (int i = 0; i < 3; i++) {
+        turnLeft();
+        delay(10000);  // 1-second delay after each turnLeft
+        turnRight();
+        delay(10000);  // 1-second delay after each turnRight
+    }
+    stop();
+    setSpeed(100);
+}
+
 void toolCommand() {
     Serial.println("Executing tool command");
+    //squeeze();
+    delay(2500);
+    stop();
+    delay(1000);
+    //swing();
+    release();
+    delay(3000);
+    stop();
     // Add your tool command code here
 }
 
@@ -283,12 +305,12 @@ void processCommand() {
             }
             break;
         case 1:
-            //forward();
-            release();
+            forward();
+            //release();
             break;
         case 2:
-            //reverse();
-            squeeze();
+            reverse();
+            //squeeze();
             break;
         case 3:
             turnLeft();
