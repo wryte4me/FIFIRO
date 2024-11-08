@@ -108,6 +108,12 @@ void release (){
     moveLinear("up");
 }
 
+void stopSqueeze (){
+    analogWrite(linearCwPwm_pin, 0);  // Set clockwise PWM pin to LOW
+    analogWrite(linearCcwPwm_pin, 0);  // Set counterclockwise PWM pin to max value (255)
+    Serial.println("Stopping");
+}
+
 
 
 
@@ -236,7 +242,13 @@ void stop() {
 
     digitalWrite(leftForward_pin, LOW);
     digitalWrite(leftReverse_pin, LOW);
+
+
+    stopSqueeze ();
+
     command = 0;
+
+
 }
 
 
@@ -271,10 +283,12 @@ void processCommand() {
             }
             break;
         case 1:
-            forward();
+            //forward();
+            release();
             break;
         case 2:
-            reverse();
+            //reverse();
+            squeeze();
             break;
         case 3:
             turnLeft();
@@ -308,23 +322,23 @@ void setup() {
 }
 
 void loop() {
-    //getCommand();
-    //processCommand();
+    getCommand();
+    processCommand();
     delay(50); // Optional: add a small delay
 
     //fireDetected();
 
     //testSonar();
 
-    enableLinear (true);
-    delay (500);
-    squeeze();
+    //enableLinear (true);
+    //delay (500);
+    //squeeze();
     //moveLinear ("up");
-    delay (5000);
-    release();
+    //delay (5000);
+    //release();
     //moveLinear ("down");
-    delay (5000);
+    //delay (5000);
     //enableLinear (false);
-    delay (2000);
+    //delay (2000);
 
 }
