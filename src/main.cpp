@@ -16,9 +16,13 @@ int rightDistance = 0;
 int leftDistance = 0;
 
 // PINS ------------------------------------------------------------------
-const byte flameFront_pin   = 26;   // Pin for the front flame sensor
-const byte flameRight_pin   = 27;   // Pin for the right flame sensor
-const byte flameLeft_pin    = 28;   // Pin for the left flame sensor
+const byte flame1   = 26;   // Pin for the front flame sensor
+const byte flame2   = 27;   // Pin for the right flame sensor
+const byte flame3    = 28;   // Pin for the left flame sensor
+const byte flame4 = 29;
+const byte flame5 = 30;
+const byte flame6 = 31;
+const byte flameNumRead = 10;
 
 const byte sonarFront_pin   = 8;    // Pin for the front sonar sensor
 const byte sonarRight_pin   = 9;    // Pin for the right sonar sensor
@@ -65,10 +69,13 @@ void setPinModes() {
     pinMode(linearCwPwm_pin, OUTPUT);   // Clockwise PWM pin for controlling the linear actuator speed (modulates speed)
     pinMode(linearCcwPwm_pin, OUTPUT);  // Counterclockwise PWM pin for controlling the linear actuator speed (modulates speed)
 
-    // Set flame sensor pins
-    pinMode(flameFront_pin, INPUT);     // Input pin for the front flame sensor (detects flames in front)
-    pinMode(flameRight_pin, INPUT);     // Input pin for the right flame sensor (detects flames on the right)
-    pinMode(flameLeft_pin, INPUT);      // Input pin for the left flame sensor (detects flames on the left)
+    // Set flame sensor pins    
+    pinMode(flame1, INPUT);
+    pinMode(flame2, INPUT);
+    pinMode(flame3, INPUT);
+    pinMode(flame4, INPUT);
+    pinMode(flame5, INPUT);
+    pinMode(flame6, INPUT);
 }
 
 
@@ -153,19 +160,42 @@ bool onFire (byte flameSensor_pin){
     return digitalRead(flameSensor_pin) == LOW;
 }
 
-byte fireDetected() {
-    if (onFire(flameFront_pin)) {
-        Serial.println("Fire detected at front"); // Print message when fire is detected in front
-        return 1; // Fire detected at front
-    } else if (onFire(flameRight_pin)) {
-        Serial.println("Fire detected at right"); // Print message when fire is detected on the right
-        return 2; // Fire detected at right
-    } else if (onFire(flameLeft_pin)) {
-        Serial.println("Fire detected at left"); // Print message when fire is detected on the left
-        return 3; // Fire detected at left
+// Function to determine flame detection using majority voting
+bool irPositive(byte flameSensor_pin) {
+    int flameDetectedCount = 0;   // Counter for flame detections
+
+    // Read the sensor multiple times
+    for (int i = 0; i < flameNumRead; i++) {
+        if (onFire(flameSensor_pin)) {
+            flameDetectedCount++;
+        }
+        delay(50); // Short delay between readings to allow for sensor stability
     }
-    Serial.println("No fire detected"); // Print message when no fire is detected
-    return 0; // No fire detected
+
+    // Return true if the majority of readings indicate flame detection
+    return (flameDetectedCount > flameNumRead / 2);
+}
+
+byte fireDetected() {
+    int flame1DetectedCount,flame2DetectedCount, flame3DetectedCount;
+
+    // Read the sensor multiple times
+    for (int i = 0; i < allFlameNumRead; i++) {
+        if (irPositive (flame1)) {
+            flame1DetectedCount++;
+        }
+        if (irPositive (flame2)) {
+            flame2DetectedCount++;
+        }
+        if (irPositive (flame3)) {
+            flame3DetectedCount++;
+        }
+
+        delay(50); // Short delay between readings to allow for sensor stability
+    } 
+    
+    if 
+    
 }
 
 
@@ -253,25 +283,13 @@ void stop() {
 
 }
 
-
-
 void toggleAutoMode(bool enable) {
     inAutoMode = enable;
     Serial.print("Auto mode ");
     Serial.println(enable ? "enabled" : "disabled");
 }
 
-void swing() {
-    setSpeed(100);
-    for (int i = 0; i < 3; i++) {
-        turnLeft();
-        delay(10000);  // 1-second delay after each turnLeft
-        turnRight();
-        delay(10000);  // 1-second delay after each turnRight
-    }
-    stop();
-    setSpeed(100);
-}
+
 
 void toolCommand() {
     Serial.println("Executing tool command");
