@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <NewPing.h> // Library for ultrasonic sensor
+#include <LibPrintf.h>
 
 // Global variable for motor speed (default to 255 for maximum speed)
 int motorSpeed = 255;
@@ -11,9 +12,9 @@ byte command = 0;  // Initialize command variable
 bool inAutoMode = false;
 int sonarInterval = 200; 
 
-int frontDistance = 0;
-int rightDistance = 0;
-int leftDistance = 0;
+float frontDistance = 0;
+float rightDistance = 0;
+float leftDistance = 0;
 
 // PINS ------------------------------------------------------------------
 const byte flame1   = 26;   // Pin for the front flame sensor
@@ -127,35 +128,11 @@ void stopSqueeze (){
 
 
 
-int sonarDistance (NewPing sonar){
+float sonarDistance (NewPing sonar){
     return sonar.ping_cm();
 }
 
-// Function to test sonar sensors
-void testSonar() {
-    // Measure distances from the front, left, and right sonar sensors
-    frontDistance = sonarDistance(sonarFront);
-    delay (sonarInterval);
-    rightDistance = sonarDistance(sonarRight);
-    delay (sonarInterval);
-    leftDistance = sonarDistance(sonarLeft);
-    delay (sonarInterval);
 
-
-    // Print the measured distances to the Serial Monitor
-    Serial.print("Front distance: ");
-    Serial.print(frontDistance);
-    Serial.println(" cm");
-    delay (1000);
-    Serial.print("Right distance: ");
-    Serial.print(rightDistance);
-    Serial.println(" cm");
-    delay (1000);
-    Serial.print("Left distance: ");
-    Serial.print(leftDistance);
-    Serial.println(" cm");
-    delay (1000);
-}
 
 bool onFire (byte flameSensor_pin){
     return digitalRead(flameSensor_pin) == LOW;
@@ -380,6 +357,7 @@ void processCommand() {
 void setup() {
     Serial.begin(9600);
     Serial3.begin(9600);
+    printf_init(Serial);  // Initialize printf with Serial output
 
     setPinModes();
 }
@@ -403,8 +381,10 @@ void loop() {
     //delay (5000);
     //enableLinear (false);
     //delay (2000);
-    fireDetected();
-
-
-
+    //fireDetected();
+    //Serial.print (sonarFront.ping_cm());
+    Serial.print (sonarRight.ping_cm());
+    Serial.print ("\t");
+    Serial.println (sonarLeft.ping_cm());
+    delay (1000);
 }
