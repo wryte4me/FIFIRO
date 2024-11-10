@@ -23,6 +23,7 @@ const byte flame4 = 29;
 const byte flame5 = 30;
 const byte flame6 = 31;
 const byte flameNumRead = 10;
+const byte allFlameNumRead = 10;
 
 const byte sonarFront_pin   = 8;    // Pin for the front sonar sensor
 const byte sonarRight_pin   = 9;    // Pin for the right sonar sensor
@@ -163,39 +164,61 @@ bool onFire (byte flameSensor_pin){
 // Function to determine flame detection using majority voting
 bool irPositive(byte flameSensor_pin) {
     int flameDetectedCount = 0;   // Counter for flame detections
-
+    bool detected = false;
+    bool detectedResult = false;
     // Read the sensor multiple times
     for (int i = 0; i < flameNumRead; i++) {
-        if (onFire(flameSensor_pin)) {
+        detected = onFire(flameSensor_pin);
+        Serial.print(detected ? 1:0 );
+        if (detected) {
             flameDetectedCount++;
         }
         delay(50); // Short delay between readings to allow for sensor stability
     }
 
     // Return true if the majority of readings indicate flame detection
-    return (flameDetectedCount > flameNumRead / 2);
+    detectedResult = (flameDetectedCount > flameNumRead / 2);
+    Serial.print ("\t");
+    Serial.println (detectedResult);
+    return detectedResult;
 }
 
-byte fireDetected() {
-    int flame1DetectedCount,flame2DetectedCount, flame3DetectedCount;
+// Function to check if at least two sensors detect flame
+bool fireDetected() {
+    int flame1DetectedCount = 0;
+    int flame2DetectedCount = 0;
+    int flame3DetectedCount = 0;
 
-    // Read the sensor multiple times
+    // Perform multiple readings for each sensor and count positive detections
     for (int i = 0; i < allFlameNumRead; i++) {
-        if (irPositive (flame1)) {
-            flame1DetectedCount++;
-        }
-        if (irPositive (flame2)) {
-            flame2DetectedCount++;
-        }
-        if (irPositive (flame3)) {
-            flame3DetectedCount++;
-        }
+        if (irPositive(flame1)) flame1DetectedCount++;
+        if (irPositive(flame2)) flame2DetectedCount++;
+        if (irPositive(flame3)) flame3DetectedCount++;
 
-        delay(50); // Short delay between readings to allow for sensor stability
-    } 
-    
-    if 
-    
+        delay(50); // Delay between readings for sensor stability
+    }
+
+    // Check if at least two of the sensors have a majority of positive detections
+    int positiveCount = 0;
+    if (flame1DetectedCount > allFlameNumRead / 2) positiveCount++;
+    if (flame2DetectedCount > allFlameNumRead / 2) positiveCount++;
+    if (flame3DetectedCount > allFlameNumRead / 2) positiveCount++;
+
+    return (positiveCount >= 2);
+}
+
+void testIr (){
+    // Print the status of each flame sensor in sequence
+    Serial.print("Flame sensors status: ");
+    Serial.print(irPositive(26) ? "1" : "0");
+    Serial.print(irPositive(27) ? "1" : "0");
+    Serial.print(irPositive(28) ? "1" : "0");
+    Serial.print(irPositive(29) ? "1" : "0");
+    Serial.print(irPositive(30) ? "1" : "0");
+    Serial.print(irPositive(31) ? "1" : "0");
+    Serial.println();  // Move to the next line for clarity in output
+
+    delay(1000); // Delay before next check
 }
 
 
@@ -362,9 +385,9 @@ void setup() {
 }
 
 void loop() {
-    getCommand();
-    processCommand();
-    delay(50); // Optional: add a small delay
+    //getCommand();
+    //processCommand();
+    //delay(50); // Optional: add a small delay
 
     //fireDetected();
 
@@ -380,5 +403,8 @@ void loop() {
     //delay (5000);
     //enableLinear (false);
     //delay (2000);
+    fireDetected();
+
+
 
 }
