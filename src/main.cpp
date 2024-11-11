@@ -12,16 +12,16 @@
 // Global variable for motor speed (default to 255 for maximum speed)
 int motorSpeed = 255;
 
-const int sonarMaxDistance  = 300;   // Maximum distance for the sonar sensor (in centimeters)
+const int sonarMaxDistance  = 400;   // Maximum distance for the sonar sensor (in centimeters)
 const byte sonarSampling    = 5;     // Number of samples to take for averaging sonar readings
 
 byte command = 0;  // Initialize command variable
 bool inAutoMode = false;
 int sonarInterval = 200; 
 
-float frontDistance = 0;
-float rightDistance = 0;
-float leftDistance = 0;
+int frontDistance = 0;
+int rightDistance = 0;
+int leftDistance = 0;
 
 // PINS ------------------------------------------------------------------
 const byte flame1   = 26;   // Pin for the front flame sensor
@@ -34,8 +34,8 @@ const byte flameNumRead = 10;
 const byte allFlameNumRead = 10;
 
 const byte sonarFront_pin   = 8;    // Pin for the front sonar sensor
-const byte sonarRight_pin   = 9;    // Pin for the right sonar sensor
-const byte sonarLeft_pin    = 10;   // Pin for the left sonar sensor
+const byte sonarRight_pin   = 10;    // Pin for the right sonar sensor
+const byte sonarLeft_pin    = 9;   // Pin for the left sonar sensor
 
 // Right motor pins
 const byte rightEna_pin     = 2;    // Enable pin for the right motor
@@ -134,11 +134,18 @@ void stopSqueeze (){
 
 
 
+void measureDistance() {
+    // Measure distances from each sonar sensor
+    leftDistance = sonarLeft.ping_cm();
+    delay(10);
+    frontDistance = sonarFront.ping_cm();
+    delay(10);
+    rightDistance = sonarRight.ping_cm();
+    delay(10);
 
-float sonarDistance (NewPing sonar){
-    return sonar.ping_cm();
+    // Print the values in the format: "Left: XX cm | Front: XX cm | Right: XX cm"
+    printf("Left: %d cm | Front: %d cm | Right: %d cm\n", leftDistance, frontDistance, rightDistance);
 }
-
 
 
 bool onFire (byte flameSensor_pin){
@@ -372,26 +379,17 @@ void setup() {
 void loop() {
     //getCommand();
     //processCommand();
-    //delay(50); // Optional: add a small delay
+    Serial.print (digitalRead (A0));
+    Serial.println (digitalRead (A1));
+
+    delay(50); // Optional: add a small delay
 
     //fireDetected();
 
     //testSonar();
 
-    //enableLinear (true);
-    //delay (500);
-    //squeeze();
-    //moveLinear ("up");
-    //delay (5000);
-    //release();
-    //moveLinear ("down");
-    //delay (5000);
-    //enableLinear (false);
-    //delay (2000);
-    //fireDetected();
-    //Serial.print (sonarFront.ping_cm());
-    Serial.print (sonarRight.ping_cm());
-    Serial.print ("\t");
-    Serial.println (sonarLeft.ping_cm());
-    delay (1000);
+    //measureDistance();
+
+ 
+    //delay (1000);
 }
