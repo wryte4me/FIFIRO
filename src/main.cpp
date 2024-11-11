@@ -145,7 +145,7 @@ void measureDistance() {
     delay(10);
 
     // Print the values in the format: "Left: XX cm | Front: XX cm | Right: XX cm"
-    printf("Left: %d cm | Front: %d cm | Right: %d cm\n", leftDistance, frontDistance, rightDistance);
+    printf("L: %d cm\t| F: %d cm\t| R: %d cm\n", leftDistance, frontDistance, rightDistance);
 }
 
 
@@ -377,6 +377,9 @@ void setupLinear (){
     release();
     stopSqueeze();
 }
+void autoMode (){
+    measureDistance();
+}
 
 void setup() {
     Serial.begin(9600);
@@ -395,10 +398,13 @@ void loop() {
     delay (500);
 
     if (inAutoMode){
-        Serial.println("RUNNING AUTO MODE");
+        //Serial.println("RUNNING AUTO MODE");
+        autoMode ();
     } else{
-        Serial.println("RUNNING MANUAL MODE");
+        //Serial.println("RUNNING MANUAL MODE");
+
     }
 
     //testLimitSwitch ();
+    
 }
