@@ -32,6 +32,8 @@ const byte flame5 = 30;
 const byte flame6 = 31;
 const byte flameNumRead = 10;
 const byte allFlameNumRead = 10;
+const byte maxLimit_pin = A1;   
+const byte minLimit_pin = A0;
 
 const byte sonarFront_pin   = 8;    // Pin for the front sonar sensor
 const byte sonarRight_pin   = 10;    // Pin for the right sonar sensor
@@ -50,7 +52,7 @@ const byte leftReverse_pin  = 5;    // Reverse pin for the left motor
 // Linear Actuator Driver Pins
 const byte linearCwEn_pin   = 22;   // Clockwise enable pin for the linear actuator driver
 const byte linearCcwEn_pin  = 23;   // Counterclockwise enable pin for the linear actuator driver
-const byte linearCwPwm_pin  = 10;   // Clockwise PWM pin for controlling the linear actuator speed
+const byte linearCwPwm_pin  = 12;   // Clockwise PWM pin for controlling the linear actuator speed
 const byte linearCcwPwm_pin = 11;   // Counterclockwise PWM pin for controlling the linear actuator speed
 
 // OBJECTS ------------------------------------------------------------------
@@ -85,6 +87,10 @@ void setPinModes() {
     pinMode(flame4, INPUT);
     pinMode(flame5, INPUT);
     pinMode(flame6, INPUT);
+
+    // Set limit switch pins
+    pinMode(maxLimit_pin, INPUT);
+    pinMode(minLimit_pin, INPUT);
 }
 
 
@@ -102,33 +108,46 @@ void enableLinear(bool status) {
 
 void moveLinear(String direction) {
     if (direction == "down") {
-        // Move linear actuator clockwise
+        // Move linear actuator down (clockwise)
         digitalWrite(linearCcwPwm_pin, LOW); // Set counterclockwise PWM pin to LOW
         analogWrite(linearCwPwm_pin, 255);   // Set clockwise PWM pin to max value (255)
         Serial.println("Moving linear actuator down.");
     } else if (direction == "up") {
-        // Move linear actuator counterclockwise
+        // Move linear actuator up (counterclockwise)
         digitalWrite(linearCwPwm_pin, LOW);  // Set clockwise PWM pin to LOW
         analogWrite(linearCcwPwm_pin, 255);  // Set counterclockwise PWM pin to max value (255)
         Serial.println("Moving linear actuator up.");
+    } else if (direction == "stop") {
+        // Stop the linear actuator
+        analogWrite(linearCwPwm_pin, 0);     // Set clockwise PWM pin to LOW
+        analogWrite(linearCcwPwm_pin, 0);    // Set counterclockwise PWM pin to LOW
+        Serial.println("Stopping linear actuator.");
     } else {
-        Serial.println("Invalid direction. Please use 'up' or 'down'.");
+        Serial.println("Invalid direction. Please use 'up', 'down', or 'stop'.");
     }
+}
+
+void stopSqueeze (){
+    moveLinear("stop");
 }
 
 void squeeze (){
     moveLinear("up");
+    while (digitalRead(maxLimit_pin)==LOW){
+        Serial.println ("Moving up");
+    }
+    stopSqueeze();
 }
 
 void release (){
     moveLinear("down");
+        while (digitalRead(minLimit_pin)==LOW){
+        Serial.println ("Moving down");
+    }
+    stopSqueeze();
 }
 
-void stopSqueeze (){
-    analogWrite(linearCwPwm_pin, 0);  // Set clockwise PWM pin to LOW
-    analogWrite(linearCcwPwm_pin, 0);  // Set counterclockwise PWM pin to max value (255)
-    Serial.println("Stopping");
-}
+
 
 
 
@@ -337,12 +356,13 @@ void processCommand() {
             }
             break;
         case 1:
-            forward();
-            //release();
+            //forward();
+            
+            squeeze();
             break;
         case 2:
-            reverse();
-            //squeeze();
+            //reverse();
+            release();
             break;
         case 3:
             turnLeft();
@@ -352,6 +372,7 @@ void processCommand() {
             break;
         case 5:
             stop();
+            stopSqueeze();
             break;
         case 6:
             toggleAutoMode(true);
@@ -377,12 +398,15 @@ void setup() {
 }
 
 void loop() {
-    //getCommand();
-    //processCommand();
-    Serial.print (digitalRead (A0));
-    Serial.println (digitalRead (A1));
+    getCommand();
+    processCommand();
+    //Serial.print (digitalRead (A0));
+    //Serial.println (digitalRead (A1));
 
-    delay(50); // Optional: add a small delay
+    //squeeze();
+
+
+    delay(1000); // Optional: add a small delay
 
     //fireDetected();
 
