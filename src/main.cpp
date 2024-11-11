@@ -274,6 +274,8 @@ void toggleAutoMode(bool enable) {
     inAutoMode = enable;
     Serial.print("Auto mode ");
     Serial.println(enable ? "enabled" : "disabled");
+
+    command = 0;
 }
 
 
@@ -330,7 +332,7 @@ void processCommand() {
     switch (command) {
         case 0:
             if (!inAutoMode) {
-                Serial.println("Waiting for command");
+                Serial.print("Waiting for command \t | ");
             }
             break;
         case 1:
@@ -387,6 +389,7 @@ void setup() {
 }
 
 void loop() {
+    printf("Mode: %s \t | ", inAutoMode ? "AUTO":"MANUAL");
     getCommand();
     processCommand();
     delay (500);
