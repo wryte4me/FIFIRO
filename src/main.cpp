@@ -10,7 +10,7 @@
 #include <LibPrintf.h>
 
 // Global variable for motor speed (default to 255 for maximum speed)
-int motorSpeed = 255;
+int motorSpeed = 0;
 
 const int sonarMaxDistance  = 400;   // Maximum distance for the sonar sensor (in centimeters)
 const byte sonarSampling    = 5;     // Number of samples to take for averaging sonar readings
@@ -93,19 +93,6 @@ void setPinModes() {
     pinMode(minLimit_pin, INPUT);
 }
 
-
-void enableLinear(bool status) {
-    if (status) {
-        digitalWrite(linearCwEn_pin, HIGH);
-        digitalWrite(linearCcwEn_pin, HIGH);
-        Serial.println("Linear actuator enabled.");
-    } else {
-        digitalWrite(linearCwEn_pin, LOW);
-        digitalWrite(linearCcwEn_pin, LOW);
-        Serial.println("Linear actuator disabled.");
-    }
-}
-
 void moveLinear(String direction) {
     if (direction == "down") {
         // Move linear actuator down (clockwise)
@@ -132,14 +119,6 @@ void stopSqueeze (){
 }
 
 void squeeze (){
-    moveLinear("up");
-    while (digitalRead(maxLimit_pin)==LOW){
-        Serial.println ("Moving up");
-    }
-    stopSqueeze();
-}
-
-void release (){
     moveLinear("down");
         while (digitalRead(minLimit_pin)==LOW){
         Serial.println ("Moving down");
@@ -147,11 +126,14 @@ void release (){
     stopSqueeze();
 }
 
-
-
-
-
-
+void release (){
+    moveLinear("up");
+    while (digitalRead(maxLimit_pin)==LOW){
+        Serial.println ("Moving up");
+    }
+    stopSqueeze();
+    
+}
 
 void measureDistance() {
     // Measure distances from each sonar sensor
@@ -217,103 +199,75 @@ bool fireDetected() {
     return (positiveCount >= 2);
 }
 
-void testIr (){
-    // Print the status of each flame sensor in sequence
-    Serial.print("Flame sensors status: ");
-    Serial.print(irPositive(26) ? "1" : "0");
-    Serial.print(irPositive(27) ? "1" : "0");
-    Serial.print(irPositive(28) ? "1" : "0");
-    Serial.print(irPositive(29) ? "1" : "0");
-    Serial.print(irPositive(30) ? "1" : "0");
-    Serial.print(irPositive(31) ? "1" : "0");
-    Serial.println();  // Move to the next line for clarity in output
-
-    delay(1000); // Delay before next check
-}
-
-
-
 // Function to set motor speed
-void setSpeed(int speed) {
+void setSpeed() {
     // Ensure the speed is within the valid PWM range (0 to 255)
-    if (speed < 0) {
-        speed = 0; // Minimum speed
-    } else if (speed > 255) {
-        speed = 255; // Maximum speed
+    if (inAutoMode) {
+        motorSpeed = 200; // Minimum speed
+    } else {
+        motorSpeed = 255; // Maximum speed
     }
 
     // Set the motor speed (PWM value) for both left and right motors
-    analogWrite(rightEna_pin, speed);  // Set speed for right motor
-    analogWrite(leftEna_pin, speed);   // Set speed for left motor
-
-    // Store the current speed for future use
-    motorSpeed = speed;
+    analogWrite(rightEna_pin, motorSpeed);  // Set speed for right motor
+    analogWrite(leftEna_pin, motorSpeed);   // Set speed for left motor
 }
 
-// Move forward (both motors forward)
+// Function to move the robot forward
 void forward() {
     Serial.println("Moving forward");
-    setSpeed(motorSpeed); // Set the speed before moving forward
+    setSpeed(); // Set the speed before moving forward
 
-    digitalWrite(rightForward_pin, HIGH);
     digitalWrite(rightReverse_pin, LOW);
-
-    digitalWrite(leftForward_pin, HIGH);
     digitalWrite(leftReverse_pin, LOW);
+    digitalWrite(rightForward_pin, HIGH);
+    digitalWrite(leftForward_pin, HIGH);
 }
 
-// Move backward (both motors reverse)
+// Function to move the robot backwards
 void reverse() {
     Serial.println("Reversing");
-    setSpeed(motorSpeed); // Set the speed before reversing
+    setSpeed(); // Set the speed before reversing
 
     digitalWrite(rightForward_pin, LOW);
-    digitalWrite(rightReverse_pin, HIGH);
-
     digitalWrite(leftForward_pin, LOW);
+    digitalWrite(rightReverse_pin, HIGH);
     digitalWrite(leftReverse_pin, HIGH);
 }
 
-// Turn left (left motor reverse, right motor forward)
+// Function to turn the robot to the left
 void turnLeft() {
     Serial.println("Turning left");
-    setSpeed(motorSpeed); // Set the speed before turning
-
-    digitalWrite(rightForward_pin, HIGH);
-    digitalWrite(rightReverse_pin, LOW);
+    setSpeed(); // Set the speed before turning
 
     digitalWrite(leftForward_pin, LOW);
+    digitalWrite(rightReverse_pin, LOW);
+    digitalWrite(rightForward_pin, HIGH);
     digitalWrite(leftReverse_pin, HIGH);
 }
 
-// Turn right (right motor reverse, left motor forward)
+// Function to turn the robot to the right
 void turnRight() {
     Serial.println("Turning right");
-    setSpeed(motorSpeed); // Set the speed before turning
+    setSpeed(); // Set the speed before turning
 
     digitalWrite(rightForward_pin, LOW);
-    digitalWrite(rightReverse_pin, HIGH);
-
-    digitalWrite(leftForward_pin, HIGH);
     digitalWrite(leftReverse_pin, LOW);
+    digitalWrite(leftForward_pin, HIGH);        
+    digitalWrite(rightReverse_pin, HIGH); 
 }
 
-// Stop the motors
+// Function to stop the robot
 void stop() {
     Serial.println("Stopping");
-    //setSpeed(0); // Stop both motors by setting speed to 0
-    digitalWrite(rightForward_pin, LOW);
+    digitalWrite(rightForward_pin, LOW);        //--------------------------------------->      Pull the motor driver control pins low
     digitalWrite(rightReverse_pin, LOW);
-
     digitalWrite(leftForward_pin, LOW);
     digitalWrite(leftReverse_pin, LOW);
 
 
-    stopSqueeze ();
-
-    command = 0;
-
-
+    //stopSqueeze ();
+    command = 0;                                //--------------------------------------->      Reset command variable
 }
 
 void toggleAutoMode(bool enable) {
@@ -326,15 +280,13 @@ void toggleAutoMode(bool enable) {
 
 void toolCommand() {
     Serial.println("Executing tool command");
-    //squeeze();
-    delay(2500);
-    stop();
-    delay(1000);
-    //swing();
+    squeeze();
+    stopSqueeze();
+    delay (1000);
     release();
-    delay(3000);
-    stop();
-    // Add your tool command code here
+    stopSqueeze();
+    command = 0;
+
 }
 
 // Function to get a command from the bluetooth module
@@ -347,6 +299,32 @@ void getCommand() {
     }
 }
 
+// Function to test the limit switch
+void testLimitSwitch (){
+    Serial.print(digitalRead(minLimit_pin));
+    Serial.println(digitalRead(maxLimit_pin));
+    delay(1000);
+
+    //00 no limit switch is triggered
+    //01 max limit switch is triggered
+    //10 min limit switch is triggered
+    //11 both limit switch is triggered
+}
+
+void testIrFlameSensor (){
+    // Print the status of each flame sensor in sequence
+    Serial.print("Flame sensors status: ");
+    Serial.print(irPositive(flame1) ? "1" : "0");
+    Serial.print(irPositive(flame2) ? "1" : "0");
+    Serial.print(irPositive(flame3) ? "1" : "0");
+    Serial.print(irPositive(flame4) ? "1" : "0");
+    Serial.print(irPositive(flame5) ? "1" : "0");
+    Serial.print(irPositive(flame6) ? "1" : "0");
+    Serial.println();  // Move to the next line for clarity in output
+
+    delay(1000); // Delay before next check
+}
+
 // Function to process commands
 void processCommand() {
     switch (command) {
@@ -356,31 +334,35 @@ void processCommand() {
             }
             break;
         case 1:
-            //forward();
-            
-            squeeze();
+            Serial.println("Forward");
+            forward();
             break;
         case 2:
-            //reverse();
-            release();
+            Serial.println("Reverse");
+            reverse();
             break;
         case 3:
+            Serial.println("Left");
             turnLeft();
             break;
         case 4:
+            Serial.println("Right");
             turnRight();
             break;
         case 5:
+            Serial.println("Stop");
             stop();
-            stopSqueeze();
             break;
         case 6:
+            Serial.println("Auto mode");
             toggleAutoMode(true);
             break;
         case 7:
+            Serial.println("Manual mode");
             toggleAutoMode(false);
             break;
         case 8:
+            Serial.println("Tool command");
             toolCommand();
             break;
         default:
@@ -389,31 +371,31 @@ void processCommand() {
     }
 }
 
+void setupLinear (){
+    release();
+    stopSqueeze();
+}
+
 void setup() {
     Serial.begin(9600);
     Serial3.begin(9600);
     printf_init(Serial);  // Initialize printf with Serial output
 
     setPinModes();
+    setupLinear();
+    
 }
 
 void loop() {
     getCommand();
     processCommand();
-    //Serial.print (digitalRead (A0));
-    //Serial.println (digitalRead (A1));
+    delay (500);
 
-    //squeeze();
+    if (inAutoMode){
+        Serial.println("RUNNING AUTO MODE");
+    } else{
+        Serial.println("RUNNING MANUAL MODE");
+    }
 
-
-    delay(1000); // Optional: add a small delay
-
-    //fireDetected();
-
-    //testSonar();
-
-    //measureDistance();
-
- 
-    //delay (1000);
+    //testLimitSwitch ();
 }
